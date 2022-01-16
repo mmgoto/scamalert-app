@@ -1,5 +1,6 @@
 package com.example.skimmerpoc
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -40,13 +41,13 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             Keylogger.subscribe { entry ->
                 var value = entry.toString();
-                codeTyped = sharedPreferences.getString("codeTyped", "");
-                if(value.contains(codeTyped.toString())){
+                codeTyped = sharedPreferences.getString("codeTyped", "").toString();
+                if(codeTyped!!.isNotEmpty() && value.contains(codeTyped.toString())){
                     Log.e("TYPED THE RIGHT CODE", value);
                     var notification = NotificationCompat.Builder(this@MainActivity, "CHANNEL_ID")
                         .setSmallIcon(R.drawable.ic_launcher_background)
-                        .setContentTitle("Be careful!")
-                        .setContentText("You just typed a sensitive code")
+                        .setContentTitle("Cuidado, não compartilhe!")
+                        .setContentText("Você acabou de digitar um código sensível e que não deve ser compartilhado!")
                         .setPriority(NotificationCompat.PRIORITY_MAX)
                         .setDefaults(Notification.DEFAULT_ALL)
                         .build()
@@ -58,18 +59,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
-
         setContentView(R.layout.activity_main)
     }
 
+    @SuppressLint("WrongConstant")
     private fun createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "My notification channel"
             val descriptionText = "My notification channel description"
-            val importance = NotificationManager.IMPORTANCE_HIGH;
+            val importance = NotificationManager.IMPORTANCE_MAX;
             val channel = NotificationChannel("CHANNEL_ID", name, importance).apply {
                 description = descriptionText
             }

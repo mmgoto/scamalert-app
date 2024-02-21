@@ -4,40 +4,23 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.SmsMessage
-import android.widget.Toast
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
-//interface SmsListener {
-//    fun onSmsReceived(message: String)
-//}
-
-//(private val listener: SmsListener)
-class BroadcastSMS : BroadcastReceiver() {
+open class BroadcastSMS : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        //Recuperar os extras que estão dentro da intent
-        //A classe Bundle recupera todos os extras, independente do tipo
         //Recuperar os extras que estão dentro da intent
         //A classe Bundle recupera todos os extras, independente do tipo
         val extras = intent.extras
 
         //Extrair somente o protocolo PDU (Protocol Data Unit) dos extras
         //O PDU é utilizado para envio de mensagens SMS
-
-        //Extrair somente o protocolo PDU (Protocol Data Unit) dos extras
-        //O PDU é utilizado para envio de mensagens SMS
         val pdus = extras!!["pdus"] as Array<*>?
-
-        //Criação de um vetor da classe SmsMessage à partir dos pdus (SMS) recebidos
 
         //Criação de um vetor da classe SmsMessage à partir dos pdus (SMS) recebidos
         val sms: Array<SmsMessage?> = arrayOfNulls<SmsMessage>(pdus!!.size)
 
-        //Variável String para armazenar o conteúdo/texto do SMS
-
-        //Variável String para armazenar o conteúdo/texto do SMS
         var conteudoSMS = ""
-
-        //Laço para percorrer todos os SMSs que chegaram na mensagem
 
         //Laço para percorrer todos os SMSs que chegaram na mensagem
         for (i in sms.indices) {
@@ -50,15 +33,16 @@ class BroadcastSMS : BroadcastReceiver() {
             conteudoSMS += sms[i]?.getMessageBody()
         }
 
-        var token = extractNumbersIfKeywordsPresent(conteudoSMS);
-
-        //listener.onSmsReceived(token[0])
-        Toast.makeText(context, token[0], Toast.LENGTH_LONG).show()
+        if(conteudoSMS != null){
+            val localIntent = Intent("sms-received")
+            localIntent.putExtra("message", conteudoSMS)
+            LocalBroadcastManager.getInstance(context).sendBroadcast(localIntent)
+        }
     }
 
 
-    private fun extractNumbersIfKeywordsPresent(input: String): List<String> {
-        val wordsToCheck = listOf("token", "verificacao", "codigo", "senha")
+    fun extractNumbersIfKeywordsPresent(input: String): List<String> {
+        val wordsToCheck = listOf("token", "verificacao", "codigo", "senha", "segredo", "password")
         val normalizedInput = input.normalize()
         val containsKeyword = wordsToCheck.any { normalizedInput.contains(it, ignoreCase = true) }
         return if (containsKeyword) {

